@@ -36,4 +36,138 @@
     
   </entry>
   
+  <entry>
+    <title>Codis 的设计与实现 Part 3</title>
+    <link href="c4pt0r.github.io/2014/11/11/codis-de-she-ji-yu-shi-xian-part-3/"/>
+    <id>c4pt0r.github.io/2014/11/11/codis-de-she-ji-yu-shi-xian-part-3/</id>
+    <published>2014-11-11T13:54:51.000Z</published>
+    <updated>2016-03-17T16:34:15.000Z</updated>
+    
+    <content type="html">&lt;h4 id=&quot;关于性能，高可用，运维等等&quot;&gt;&lt;a href=&quot;#关于性能，高可用，运维等等&quot; class=&quot;headerlink&quot; title=&quot;关于性能，高可用，运维等等&quot;&gt;&lt;/a&gt;关于性能，高可用，运维等等&lt;/h4&gt;&lt;p&gt;「对于一个设计良好的分布式系统来说，单机性能从来不是一个问题 」—— 我&lt;/p&gt;
+&lt;p&gt;第一篇文章就说了，Codis 采用了 Proxy 的方案，所以必然会带来单机性能的损失，经测试，在不开 pipeline 的情况下，大概会损失 40% 左右的性能，但是 Redis 本身是一个快得吓人的东西，即使单机损失了 40% 仍然是一个很大的数字。&lt;br&gt;另外一个比较好的地方是，Codis 本身是可以充分的利用多核的（Thanks to golang），在多线程客户端的环境下，不会像 Twemproxy 那样，撑死就跑满一个 CPU（当然你可以部署 Twemproxy 的多实例，但不就又增加运维成本了嘛。。。）。而且不要忘了，&lt;br&gt;Codis 可以通过平行扩展多个 Proxy 实现性能成倍的提升，一台机器 CPU 满了？没事，再另一台机器起一个 proxy 就是了。某个 Redis 跑满了？没事，把一部分数据迁移到另外一个 Redis 实例好了。所以，我们从来不认为单机性能能说明什么。&lt;br&gt;使用 Codis 带来的最大的好处，是为你的缓存提供了弹性扩缩容的能力, 而不是追求榨干底下 Redis 的性能。。。这也是我们选择了 go 而不是 c 来开发的原因。&lt;/p&gt;
+&lt;p&gt;我们进行了一个详细的性能测试，测试的结果如下：&lt;a href=&quot;https://github.com/wandoulabs/codis/blob/master/doc/benchmark_zh.md&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Benchmark&lt;/a&gt; , 2 proxy 的情况下，单机可以到达 20w 的 QPS.&lt;/p&gt;
+&lt;h5 id=&quot;关于HA-Redis-HA-Proxy-HA&quot;&gt;&lt;a href=&quot;#关于HA-Redis-HA-Proxy-HA&quot; class=&quot;headerlink&quot; title=&quot;关于HA (Redis HA, Proxy HA)&quot;&gt;&lt;/a&gt;关于HA (Redis HA, Proxy HA)&lt;/h5&gt;&lt;p&gt;对于Redis HA, 我个人是蛮纠结的，仔细用过的 Codis 的同学会发现，在某个 server group 的 master 死掉的时候，虽然 server group 里可以有多个 slave，但是这些 slave 并不会自动的提升为 master。&lt;br&gt;当然实现这个功能并不困难，但是我认为这种情况应该让管理员清楚，并手动的操作，因为如果自动的切到 slave 上，这段时间原 master 还没同步到 slave 上的数据有可能就会冲突，如果 master 又复活了，解决数据的冲突是一个麻烦的问题，与其自动的操作，不如给客户端返回失败 (也只是这个机器负责的slots 会失败，如果实例足够多，不会出现致命的单点故障), 交给管理员去处理。  &lt;/p&gt;
+&lt;p&gt;Proxy HA, 在决定使用无状态的 proxy 的方案时，就自动带来了高可用性的保证，这个不多说，有很多种做法，比如智能DNS，HAProxy，客户端连接 ZooKeeper 做 Proxy 的连接池等。&lt;/p&gt;
+&lt;p&gt;说到可运维性，Codis 几乎一切的操作都是通过 codis-config 发起的，codis-config 在做任何操作的时候，都会到 ZooKeeper 拿一个锁，以保证是唯一的操作实例，这也是防止路由表被改坏的一个措施，尤其是设置迁移这样比较敏感的操作，必须保证不能同时有多个 slots 处于迁移状态，所以，在整个迁移的过程中，是不释放锁的。&lt;/p&gt;
+&lt;p&gt;那么如果在迁移一个 slot 的过程中，我强行杀死 (kill -9) codis-config 不让它释放迁移的锁会怎么样？会死锁吗？&lt;/p&gt;
+&lt;p&gt;答案是：不会的。&lt;/p&gt;
+&lt;p&gt;为什么？首先，在迁移过程中的任意阶段打断，都是没有问题的，因为对底层的 redis 来说，迁移的只是一个个原子的 key，我杀掉了 codis-config ，只是停止了发指令的人，导致这个 slot 没有全部迁移干净而已, 在 Zk 上看到的也只是一个长期处于迁移状态的 slot (由于 codis-config 被杀了，没人去发迁移命令，也不会在迁移完成的时候修改slot状态了). 此时如果客户端有请求，proxy 也会主动的发一个 migratekey 先强行的把这个key迁移过来，所以对客户端也是没有影响的。&lt;/p&gt;
+&lt;p&gt;而且 codis-config 还有一个特性，每次启动的时候，都会在 Zk 上注册一个临时节点， 记录自己的 pid 和机器名，而且上的所有的锁，都会带上机器名和pid的签名，每次启动的时候，会扫描一下所有未释放的锁，如果这个锁的所属进程的临时节点已经不存在了，就会直接把这个锁释放掉，于是避免了死锁的状态。&lt;/p&gt;
+&lt;p&gt;只不过在下次开始新的迁移任务之前，需要先将这个未迁移完成的slot迁移掉，方法是发起一个迁移任务，from slot 和 to slot 都写成这个slot id, new group id设成之前未完成的那个任务的group id, 这个是为了保证系统能重新回到一个干净的状态，再进行下一个新的迁移任务。这是一个人为加的限制。&lt;/p&gt;
+&lt;p&gt;在实际使用 Codis 的过程中，我们为一些特别懒的业务 （懒得重建缓存），开发了叫做redis-port的工具，它的作用是，作为一个假的 slave，挂在一个redis后面，然后将master的数据同步回来，sync 到 codis 集群上，所以，业务方根本无需重建缓存，直接同步完后，换个地址重启服务就OK了， 这也是问哦们在公司内部推动项目特别轻松的一个杀手锏。 :P&lt;/p&gt;
+&lt;p&gt;除此之外，Codis 还有一个和其他后端中间件不太一样的地方：它不仅提供了完整的 Unix CLI interface, 居然有一个炫酷的 dashboard 和完整的 RESTful API ! 恩，没错，而且在实际的生产环境中，我们发现使用 dashboard 更安全，更少误操作，更方便，而且系统的实时状态都非常清晰。这年头，要没有一个好看的 dashboard 都不好意思开源了。。。（嘛，其实是我刚学 AngularJS，技痒了。。。不过最终效果还不错）。&lt;/p&gt;
+&lt;p&gt;三篇文章差不多写完了，有什么问题可以在 github 上 post issue, 也可以在微博上联系我 &lt;a href=&quot;http://weibo.com/c4pt0r&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;@Dongxu_Huang&lt;/a&gt; 或 &lt;a href=&quot;http://weibo.com/chuangyiyongpin&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;@goroutine&lt;/a&gt;, 当然，邮件也可以，同时如果你对豌豆荚基础架构组有兴趣，也欢迎你把简历发过来，我们是 Golang 的重度用户 :) 也是开源的狂热分子，有机会希望和你一起工作, email: huangdongxu1987@gmail.com&lt;/p&gt;
+&lt;p&gt;announce一下 Codis 的作者们:&lt;/p&gt;
+&lt;p&gt;@Dongxu_huang (aka c4pt0r): codis-config, 分布式协议实现，数据迁移及auto rebalancer，Dashboard, unit-test…&lt;br&gt;@goroutine (aka ngaut): codis-proxy, Redis 协议解析, router，zkhelper, unit-test…&lt;br&gt;@spinlock9: redis patch, redis-port, benchmark, test …  &lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h4 id=&quot;关于性能，高可用，运维等等&quot;&gt;&lt;a href=&quot;#关于性能，高可用，运维等等&quot; class=&quot;headerlink&quot; title=&quot;关于性能，高可用，运维等等&quot;&gt;&lt;/a&gt;关于性能，高可用，运维等等&lt;/h4&gt;&lt;p&gt;「对于一个设计良好的分布式系统来说，单机性能从来不是
+    
+    </summary>
+    
+      <category term="Codis" scheme="c4pt0r.github.io/categories/Codis/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Codis 的设计与实现 Part 2</title>
+    <link href="c4pt0r.github.io/2014/11/11/codis-de-she-ji-yu-shi-xian-part-2/"/>
+    <id>c4pt0r.github.io/2014/11/11/codis-de-she-ji-yu-shi-xian-part-2/</id>
+    <published>2014-11-11T10:06:41.000Z</published>
+    <updated>2016-03-17T16:34:36.000Z</updated>
+    
+    <content type="html">&lt;h4 id=&quot;多-Proxy-架构&quot;&gt;&lt;a href=&quot;#多-Proxy-架构&quot; class=&quot;headerlink&quot; title=&quot;多 Proxy 架构&quot;&gt;&lt;/a&gt;多 Proxy 架构&lt;/h4&gt;&lt;p&gt;&lt;img src=&quot;https://raw.githubusercontent.com/wandoulabs/codis/master/doc/pictures/architecture.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;在 Codis 的设计中， Proxy 被设计成无状态的，客户端连接任何一个 Proxy 都是一样的。而且每个 Proxy 启动的时候，会在 Zookeeper 上注册一个临时节点， 所以客户端甚至可以根据这个特性实现 HA （其实我在豌豆荚内部就写了一个基于 Jedis 的 Codis HA RoundRobinPool）  &lt;/p&gt;
+&lt;p&gt;当然，这个设计带来的好处是，请求可以被负载均衡，而且在整个系统中不会出现单点。 但是，问题来了，由于 Codis 是动态扩缩容的功能的， 当 Codis 在进行数据迁移的过程中，如何保证任意一个 Proxy 都不会读到老的或者错误的数据？  &lt;/p&gt;
+&lt;p&gt;解释这个问题之前，我想先介绍一下 Codis 的数据存储方式和关于数据迁移的一些前置知识：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;数据被根据key，分布在 1024 个 slot 中， slot 是一个虚拟的概念，数据存储在实际的多个 codis-server （codis 修改版的 redis-server） 中，每个 codis-server 负责一部分key-value数据， 哈希算法是 crc32(key) % 1024&lt;/li&gt;
+&lt;li&gt;数据迁移是由 codis-config 发起的，在 codis-config 看来，数据迁移的最小单位是 slot&lt;/li&gt;
+&lt;li&gt;对于 codis-server 来说，没有任何分布式逻辑在其中， 只是实现了几个关于数据传输的指令： slotsmgrtone, slotsmgrt…. 其主要的作用是：随机选取特定 slot 中的一个 key-value pair, 传输给另外一个 codis-server, 传输成功后，把本地的这个 key-value pair 删除， 注意， 这个整个操作是原子的。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;所以，这就决定了 Codis 并不太适合 key 少，但是 value 特别大的应用， 而且你的 key 越少， value 越大，最后就会退化成单个 redis 的模型 （性能还不如 raw redis），所以 Codis 更适合海量 Key, value比较小 （&amp;lt;= 1 MB) 的应用。&lt;/p&gt;
+&lt;p&gt;为什么 codis-server 的数据迁移是一个个key的，而不是类似很多其他分布式系统，采用 replication 的方式？ 我认为，对于 redis 这种系统来说，实现 replication 不太经济， 首先，你需要 rdb dump 吧？ 在 redis 里面所有的操作严格来说都是串行的（单线程模型决定），所以dump数据是需要 fork 一个新进程的， 否则如果直接 SAVE 会阻塞唯一的主线程，同时还得考虑dump过程和传输过程中产生的新数据的同步的问题， 实现起来比较复杂。所以我们每次只原子的迁走一个 key，不会把主线程 block 住， redis 操作的是内存，批量的一次性写入和分多次set几乎没有区别（对于单机而言）， 而且这个模型还避免了迁移过程中的数据更新同步的问题，因为由于迁移一个 key 的操作是原子的， 对于这个 redis-server 来说， 在完成这次迁移指令之前，是不会响应其他请求的。 所以保证了数据的安全。&lt;/p&gt;
+&lt;p&gt;一次典型的迁移流程：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;codis-config 发起迁移指令如 pre_migrate slot_1 to group 2&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;codis-config 等待所有的 proxy 回复收到迁移指令, 如果某台 proxy 没有响应, 则标记其下线 (由于proxy启动时会在zk上注册一个临时节点, 如果这个proxy挂了, 正常来说, 这个临时节点也会删除, 在codis-config发现无响应后, codis-config会等待30s, 等待其下线, 如果还没下线或者仍然没有响应, 则codis-config 将不会释放锁, 通知管理员出问题了) 相当于一个2阶段提交&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;codis-config 标记slot_1的状态为 migrate, 服务该slot的server group改为group2, 同时codis-config向group1的redis机器不断发送 SLOTSMGRT 命令, target参数是group2的机器, 直到group1中没有剩余的属于slot_1的key&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;迁移过程中, 如果客户端请求 slot_1 的 key 数据, proxy 会将请求转发到group2上, proxy会先在group1上强行执行一次 MIGRATE key 将这个键值提前迁移过来. 然后再到group2上正常读取&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;迁移完成, 标记slot_1状态为online&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;关键点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;所有的操作命令，都通过 Zookeeper 中转，所有的路由表，都放置在 ZooKeeper 中，确保任意一个 proxy 的视图都是一样的。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;codis-config 在实际修改slot状态之前，会确保所有的 proxy 收到这个迁移请求。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;在客户端读取正在迁移的slot内的数据之前， 会强制在源redis是执行一下迁移这个key的操作。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这两点保证了，proxy 在读取数据的时候，总是能在迁移的目标机上命中这个 key。&lt;/p&gt;
+&lt;p&gt;这就是 Codis 如何进行安全的数据迁移的过程。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h4 id=&quot;多-Proxy-架构&quot;&gt;&lt;a href=&quot;#多-Proxy-架构&quot; class=&quot;headerlink&quot; title=&quot;多 Proxy 架构&quot;&gt;&lt;/a&gt;多 Proxy 架构&lt;/h4&gt;&lt;p&gt;&lt;img src=&quot;https://raw.githubuserconten
+    
+    </summary>
+    
+      <category term="Codis" scheme="c4pt0r.github.io/categories/Codis/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Codis 的设计与实现 Part 1</title>
+    <link href="c4pt0r.github.io/2014/11/11/codis-de-she-ji-yu-shi-xian-1/"/>
+    <id>c4pt0r.github.io/2014/11/11/codis-de-she-ji-yu-shi-xian-1/</id>
+    <published>2014-11-11T08:10:15.000Z</published>
+    <updated>2016-03-17T16:34:54.000Z</updated>
+    
+    <content type="html">&lt;p&gt;最近开源了 &lt;a href=&quot;https://github.com/wandoulabs/codis&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Codis&lt;/a&gt;，在 Github 上的反响挺不错的，3天已经收集到了 1000 多 stars, 让我比较吃惊。&lt;br&gt;也从侧面说明了确实分布式缓存是大家都会遇到的问题。于是我打算在本篇和接下来的几篇 Blog 详细说明一下 Codis 的设计和一些背后的考虑，以及对于分布式存储（尤其是缓存）系统的一些思考。&lt;/p&gt;
+&lt;p&gt;####Why proxy?&lt;/p&gt;
+&lt;p&gt; Codis 的架构采用了 Proxy-based 的设计，没有走官方 Cluster 的路，官方的 Cluster 实现是 P2P 的模型，依靠 Gossip 协议进行消息同步和将数据分若干个 Slot 作为管理的单位，客户端需要更改。这个模型的好处是：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;真正的无中心节点&lt;/li&gt;
+&lt;li&gt;对于客户端来说请求的性能不会损失太多&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;但是缺点同样明显：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;状态很难明确，你很难清楚的知道集群现在处于什么状态&lt;/li&gt;
+&lt;li&gt;对与redis来说，集群的升级困难，运维困难，因为它将分布式的逻辑和存储引擎绑定在了一起。&lt;/li&gt;
+&lt;li&gt;需要依赖 smart client&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这两个缺点几乎在任何 p2p 模型的分布式系统中都存在，由于第一个问题，导致开发和调试的过程也异常艰辛（官方的 cluster 几乎写了 3 年才比较稳定）&lt;/p&gt;
+&lt;p&gt;而 Proxy-based 的方式的好处就比较明显了：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;开发成本低&lt;/li&gt;
+&lt;li&gt;业务的切换成本低&lt;/li&gt;
+&lt;li&gt;Proxy 的逻辑和存储的逻辑是隔离的&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;所以，在 Codis 之前，Twemproxy 是这个方案的最优的选择，应用也非常广泛，许多大型的互联网公司都在使用它，但是 Twemproxy 也有它的问题， 最大的问题是：Twemproxy 真的就只是一个 Proxy 而已, 集群的功能完全没有。而且看上去 Twitter 也不打算继续维护它了。&lt;br&gt;Twitter 最近的一个 &lt;a href=&quot;http://highscalability.com/blog/2014/9/8/how-twitter-uses-redis-to-scale-105tb-ram-39mm-qps-10000-ins.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Talk&lt;/a&gt;，提到了Twitter 内部对于 Scaling Redis 的一些做法和想法，其中对于 Proxy 的方案是比较推崇的(同时也提到了他们内部也不再使用 Twemproxy 了….)，里面理由写得比较清楚了，有兴趣的可以去看看。同样的， Facebook 之前那篇关于扩展 memcached 的论文也提到了类似的方案 （mcrouter）。其中我觉得这个方案背后最重要的思想就是：存储和分布式逻辑分离。至于因为转发请求而损失的性能，可以通过其他的方式补回来, 比如水平扩展 Proxy。带来的好处是整个系统的状态非常清晰，几乎所有组件都可以独立的部署和升级，程序还比较好写，所以 Codis 从一开始就坚定的走 Proxy 这条路。&lt;/p&gt;
+&lt;p&gt;但是相对于 Twemproxy， Codis 又有一些改进，首先集成了集群的功能，使用 Presharding 对分散数据的存储。所有的集群状态信息依赖 ZooKeeper 进行同步， 所有的 Proxy 是无状态的。这样就可以实现多 Proxy 的水平扩展。&lt;br&gt;另外一个比较重要的决定是使用 Go 作为主要开发语言，抛掉信仰问题不谈 (我和 @goroutine 都是 go 的脑残粉)， go 几乎就是针对这种后端的网络程序而发明出来的语言，这给开发工作带来了极大的效率提升，从写下第一行代码，到第一个可用版本，几乎才用了不到一个月的时间。&lt;/p&gt;
+&lt;p&gt;当然，使用多 Proxy 对于迁移过程中数据一致性带来一些问题，会在下一篇 blog 介绍一下 Codis 是怎么解决的。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近开源了 &lt;a href=&quot;https://github.com/wandoulabs/codis&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Codis&lt;/a&gt;，在 Github 上的反响挺不错的，3天已经收集到了 1000 多 stars, 让我比
+    
+    </summary>
+    
+      <category term="Codis" scheme="c4pt0r.github.io/categories/Codis/"/>
+    
+    
+  </entry>
+  
 </feed>
