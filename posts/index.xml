@@ -1,138 +1,18 @@
-<!DOCTYPE html>
-<html lang="en" dir="auto">
-
-<head><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="index, follow">
-<title>Random Access Memroy</title>
-
-<meta name="description" content="Random Access Memory">
-<meta name="author" content="Ed Huang">
-<link rel="canonical" href="http://c4pt0r.github.io/" />
-<link crossorigin="anonymous" href="/assets/css/stylesheet.min.6f60056d44d3f7eb69a4bc6c332b59960f3a995802bded244750232f33713c49.css" integrity="sha256-b2AFbUTT9&#43;tppLxsMytZlg86mVgCve0kR1AjLzNxPEk=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://c4pt0r.github.io/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://c4pt0r.github.io/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="http://c4pt0r.github.io/favicon-32x32.png">
-<link rel="apple-touch-icon" href="http://c4pt0r.github.io/apple-touch-icon.png">
-<link rel="mask-icon" href="http://c4pt0r.github.io/safari-pinned-tab.svg">
-<meta name="theme-color" content="#2e2e33">
-<meta name="msapplication-TileColor" content="#2e2e33">
-<meta name="generator" content="Hugo 0.89.4" />
-<link rel="alternate" type="application/rss+xml" href="http://c4pt0r.github.io/index.xml">
-<link rel="alternate" type="application/json" href="http://c4pt0r.github.io/index.json">
-<noscript>
-    <style>
-        #theme-toggle,
-        .top-link {
-            display: none;
-        }
-
-    </style>
-    <style>
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --theme: rgb(29, 30, 32);
-                --entry: rgb(46, 46, 51);
-                --primary: rgb(218, 218, 219);
-                --secondary: rgb(155, 156, 157);
-                --tertiary: rgb(65, 66, 68);
-                --content: rgb(196, 196, 197);
-                --hljs-bg: rgb(46, 46, 51);
-                --code-bg: rgb(55, 56, 62);
-                --border: rgb(51, 51, 51);
-            }
-
-            .list {
-                background: var(--theme);
-            }
-
-            .list:not(.dark)::-webkit-scrollbar-track {
-                background: 0 0;
-            }
-
-            .list:not(.dark)::-webkit-scrollbar-thumb {
-                border-color: var(--theme);
-            }
-        }
-
-    </style>
-</noscript><meta property="og:title" content="Random Access Memroy" />
-<meta property="og:description" content="Random Access Memory" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="http://c4pt0r.github.io/" />
-
-<meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Random Access Memroy"/>
-<meta name="twitter:description" content="Random Access Memory"/>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Random Access Memroy",
-  "url": "http://c4pt0r.github.io",
-  "description": "Random Access Memory",
-  "thumbnailUrl": "http://c4pt0r.github.io/favicon.ico",
-  "sameAs": [
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Posts on Random Access Memroy</title>
+    <link>http://c4pt0r.github.io/posts/</link>
+    <description>Recent content in Posts on Random Access Memroy</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Fri, 03 Dec 2021 12:16:37 +0800</lastBuildDate><atom:link href="http://c4pt0r.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>大教堂终将倒下，但集市永存</title>
+      <link>http://c4pt0r.github.io/posts/oss-in-china/</link>
+      <pubDate>Fri, 03 Dec 2021 12:16:37 +0800</pubDate>
       
-  ]
-}
-</script>
-</head>
-
-<body class="list" id="top">
-<script>
-    if (localStorage.getItem("pref-theme") === "dark") {
-        document.body.classList.add('dark');
-    } else if (localStorage.getItem("pref-theme") === "light") {
-        document.body.classList.remove('dark')
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('dark');
-    }
-
-</script>
-
-<header class="header">
-    <nav class="nav">
-        <div class="logo">
-            <a href="http://c4pt0r.github.io" accesskey="h" title="Random Access Memroy (Alt + H)">Random Access Memroy</a>
-            <span class="logo-switches">
-                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
-                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
-            </span>
-        </div>
-        <ul id="menu">
-        </ul>
-    </nav>
-</header>
-<main class="main"> 
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>大教堂终将倒下，但集市永存
-    </h2>
-  </header>
-  <section class="entry-content">
-    <p>作为一个在中国的数据库软件从业者，最近被不少朋友在微信上询问业内某厂商「团队整合」的新闻，我其实并不想对这个事情发表什么评论。我始终坚信：基础软件，未来只有开源一条路。如果不开源，或者说内核不开源的话，产品的生命力是有限的。所以，在这里想分享一些我个人有关开源与闭源的看法，希望大家看完这篇文章后能够有些自己的思考 :）
+      <guid>http://c4pt0r.github.io/posts/oss-in-china/</guid>
+      <description>作为一个在中国的数据库软件从业者，最近被不少朋友在微信上询问业内某厂商「团队整合」的新闻，我其实并不想对这个事情发表什么评论。我始终坚信：基础软件，未来只有开源一条路。如果不开源，或者说内核不开源的话，产品的生命力是有限的。所以，在这里想分享一些我个人有关开源与闭源的看法，希望大家看完这篇文章后能够有些自己的思考 :）
 顺便提一下，看到这个标题，熟悉开源运动的朋友肯定会心一笑，没错，作为 ESR 的门徒，我从不掩饰对于《大教堂与集市》这篇著作的喜爱。另外作为从事开源的创业者，这几年的实践让我们对于 ESR 的这本书的理解更加的深入，我会试着在这篇文章总结一些我们经常被问到的问题，最后一部分我斗胆给 ESR 的理论在当今云时代的背景下做一些修订，另外我们讨论的软件范围仅限于基础软件（数据库，编译器，操作系统等）。
 一、代码是核心竞争力吗？ 我和一些闭源软件项目的作者聊过，大多数选择闭源的原因不外乎以下几种：
  觉得自己的核心算法非常厉害，不希望竞争对手模仿 担心用户拿到代码，就不给钱了 没有找到或者建立自己的护城河 代码太丑，不好意思开源 怕被人找到 Bug  其中以前三种答案居多，我非常能理解，这些回答也都是非常正当的理由，只是这篇文章我们好好的就事论事的挨个分析一下，对于第四第五个理由，其实我不想过多展开，我们聊聊前两种，先看第一种，我在后边会聊聊第二种。
@@ -142,7 +22,7 @@
 二、代码不是核心竞争力，那什么才是？ 在聊真正的核心竞争力之前，我们来聊聊闭源软件的局限性。
 我们看看一个闭源的软件的一生：立项的动机可能是某个公司或者个人对于一个市场机会的洞见找到了一个高价值的场景，通过开发一个软件能够很好的提高效率或创造价值，甚至可能就是一张来自甲方的合同，总之这个公司招募了一伙程序员，设计师，产品经理，开始项目的开发。一切顺利的情况，顺利的满足了甲方的需求，甲方也很开心的付钱了，然后这个公司发现，好像这个软件改一改（甚至不用改）也就能够在同行业另一个客户那边卖出去，这就太好了，感觉找到了一条致富路。可是好境不长，客户这边的场景和需求在变化，原来的软件可能不一定能够满足新的需求了，但是开发团队就这几杆枪，稍有不慎一个方向判断错误，可能时间和机会窗口就错过了。这就意味着，对于项目领头人的要求就很高，要求持续能够引领行业的方向。还有一种方式是挑选一个相对狭窄或迭代不快的领域，存活时间能够延长一些。对于甲方也很难受，总是感觉需求的满足慢半拍，甚至对于有些有着研发能力的甲方，因为受限于没有源码，就算知道如何改进，也只能干瞪眼。
 其实这个问题的本质在于：闭源软件开发商虽然可能是技术的专家，但是并不一定是业务或者场景的专家，软件进化的速度受限于开发团队和产品经理自己的认知和见识的进化速度，除非开发商强大到能够持续引领整个行业的进化方向，否则无解。
-其实这个问题，教员早就给出了答案：「…凡属正确的领导，必须是从群众中来，到群众中去。这就是说，将群众的意见（分散的无系统的意见）集中起来（经过研究，化为集中的系统的意见），又到群众中去作宣传解释，化为群众的意见，使群众坚持下去，见之于行动，并在群众行动中考验这些意见是否正确。然后再从群众中集中起来，再到群众中坚持下去，如此无限循环，一次比一次地更正确、更生动、更丰富…」 — 《关于领导方法的若干问题》, 1943
+其实这个问题，教员早就给出了答案：「&amp;hellip;凡属正确的领导，必须是从群众中来，到群众中去。这就是说，将群众的意见（分散的无系统的意见）集中起来（经过研究，化为集中的系统的意见），又到群众中去作宣传解释，化为群众的意见，使群众坚持下去，见之于行动，并在群众行动中考验这些意见是否正确。然后再从群众中集中起来，再到群众中坚持下去，如此无限循环，一次比一次地更正确、更生动、更丰富&amp;hellip;」 &amp;mdash; 《关于领导方法的若干问题》, 1943
 要我说教员放在当代，就算是当个程序员，也能是一个大师级别的。教员的这段话，包含两个关键的点，完美的解释了开源软件的生命力的来源，我下面的详细讲讲。
 第一点，开源软件的生命力来自于场景的垄断，而背后更本质的垄断是人才垄断。
 为什么强调从群众中来？回顾刚才我们闭源软件的那段，其实一个关键的点是，软件的初始动机虽然来自于少数人的洞见，但是持续保持洞见并不是一件容易的事情，这就是为什么很多技术团队或者产品团队容易「自嗨」，一旦脱离用户，极易出现这样的问题。闭源软件厂商触及用户的手段不外乎于传统的商业宣传和销售，用户从感兴趣到使用起来的门槛很高，实施的周期也很长，另外通常销售会站在产品团队和客户中间，通过一些信息不对称来获取超额的利润，其中最大的信息不对称就是封闭的源代码本身或者定制化。这导致的问题是，相比流行的开源软件，闭源软件没有办法高效的获取，吸收和理解更多的场景，这对于一个通用的基础软件产品来说通常是一个致命的问题，如果见过的场景不够多，更没有办法判断产品那些需求该做是普遍需求，哪些是伪需求坚决不做，我认为这就是做产品的「触感」。
@@ -150,19 +30,16 @@
 在上面那个过程中还会产生一个更加厉害的效应：人才的垄断。正所谓「事在人为」，上面提到的场景垄断中种种的技术决策和实践都是人来操作的。一个流行的开源软件在变成事实标准的过程中，一定会培养出大量熟悉这个产品的工程师，用户，摇旗呐喊的粉丝，代码贡献者，甚至挑刺吐槽的人。传统意义上，大家理解的开源社区只是狭义上的开发者社区，只有贡献代码才算参与，但是我认为只要和这个产品发生关联的人，都算是社区的一部分，「人尽其材」才是构建开源社区的终极目标。这个优势是会随着时间的流逝不断累积，这个很好理解，举个例子：A 公司的工程师在 A 公司的工作中学习使用了 TiDB 也很好的解决了问题，然后这个工程师作为数据库专家跳槽到了 B 公司，遇到同样的问题时，你猜他会选什么？ :)
 第二点，迭代，迭代，迭代，只有高速迭代才能立于不败之地
 上面教员的话里面有个关键的点，关于正向循环，也就是迭代。这个道理同样也适用于软件开发，软件从来都不是静止的，随着市场和竞争环境的变化，你今天的竞争优势，很可能明天就不是了。很多人都喜欢用静态的眼光看待问题，热衷于各种方案的横向对比，而忽略了进化速度，在这点上，我可能更看重的是同一个产品的纵向对比，举个例子：目前有 A, B, C三个方案，可能当下看这三个方案差距不大，也许在百分之五十之内。但是如果其中一个开源方案每次和自己半年前比都是在翻倍的提升（背后开源社区推动），但是闭源的方案的进步受限于团队规模和资源。这时候的选择除非是那种火烧眉毛的情况，否则一定应该选择一个迭代速度更快，增长率更好，更代表未来的方案，这个也很好理解。这是人的思维的一个惯性，人总是倾向用线性思维去看待问题，于是对非线性增长的事物往往会习惯性的低估。
-说一个更加震撼的例子，我粗略统计了一下，从 2018 到现在，也就短短一年多时间，整个 TiDB 的 SQL 层这么一个项目发生了 30000 多次提交，有接近 60% 的源码被修改。也就是说，每一年的 TiDB 都和上一年是不一样的，是一个更适应当下的，更加进步的一个 TiDB，而且随着社区的不断壮大，迭代的速度会越来越快。我完全不能想象，如果 TiDB 是一个闭源软件，从第一行代码开始写，到现在短短的 5 年时间，如何能够到达现在这个成熟度，这一切都是得益于开源社区的带来的加速度和反复迭代。...</p>
-  </section>
-  <footer class="entry-footer"><span title='2021-12-03 12:16:37 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
-  <a class="entry-link" aria-label="post link to 大教堂终将倒下，但集市永存" href="http://c4pt0r.github.io/posts/oss-in-china/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>In Community We Trust
-    </h2>
-  </header>
-  <section class="entry-content">
-    <p>前些天在与友人喝咖啡的时候，正好聊到关于 PingCAP 和 TiDB 的一些历史以及对于开源软件公司核心竞争力的理解，回顾这几年的创业生涯和 TiDB 社区的生长壮大，就像是一场巨大且正在进行中的社会学实验，原本零散的一些想法随着一条主线变得逐渐清晰，就想着写成文章总结一下关于社区对于开源软件以及开源公司到底意味着什么。
+说一个更加震撼的例子，我粗略统计了一下，从 2018 到现在，也就短短一年多时间，整个 TiDB 的 SQL 层这么一个项目发生了 30000 多次提交，有接近 60% 的源码被修改。也就是说，每一年的 TiDB 都和上一年是不一样的，是一个更适应当下的，更加进步的一个 TiDB，而且随着社区的不断壮大，迭代的速度会越来越快。我完全不能想象，如果 TiDB 是一个闭源软件，从第一行代码开始写，到现在短短的 5 年时间，如何能够到达现在这个成熟度，这一切都是得益于开源社区的带来的加速度和反复迭代。</description>
+    </item>
+    
+    <item>
+      <title>In Community We Trust</title>
+      <link>http://c4pt0r.github.io/posts/in-community-we-trust/</link>
+      <pubDate>Fri, 03 Dec 2021 12:09:52 +0800</pubDate>
+      
+      <guid>http://c4pt0r.github.io/posts/in-community-we-trust/</guid>
+      <description>前些天在与友人喝咖啡的时候，正好聊到关于 PingCAP 和 TiDB 的一些历史以及对于开源软件公司核心竞争力的理解，回顾这几年的创业生涯和 TiDB 社区的生长壮大，就像是一场巨大且正在进行中的社会学实验，原本零散的一些想法随着一条主线变得逐渐清晰，就想着写成文章总结一下关于社区对于开源软件以及开源公司到底意味着什么。
 无处不在的网络效应 两种网络效应
 很多人听说过网络效应（梅特卡夫效应：网络的价值与联网用户的平方数成正比），许多伟大的产品和公司通过网络效应构建起了强大的护城河。提到网络效应，经典例子在通信领域，例如手机，每多一个用户，对于所有用户的价值就越大，虽然大家也无意为他人创造价值，但是一旦开始使用，该行为就会帮助这个网络创造价值。很多我们熟知的 to C公司，尤其是社交网络和IM（即时通信软件） ，通过这个效应构建了极高的壁垒。NfX Venture 在他们的一篇博客(https://www.nfx.com/post/network-effects-manual/）中详细描述了很多种网络效应，在介绍社区之前，我想着重介绍下其中和开源软件相关的两种网络效应。
  基于从众心理的网络效应  这类网络效应通常是从一些意见领袖开始，可能是行业大咖，可能是社交潮人，常常出现在一个新产品要去进攻一个老产品的市场时。尽管这个新产品相比市场的统治者来说不一定成熟，但它通常会带着一些鲜明的特色或者更加前沿的理念，吸引那些对「主流」不满或者希望突显自身前沿视野的意见领袖的支持，造成一种「很酷的人都在用，你不用你就要被淘汰了」的感觉。
@@ -181,81 +58,8 @@
 死亡鸿沟和希望之坡
 就像《跨越鸿沟》这本书中提到的，开源软件也有自己的生命周期曲线，这是和社区息息相关的。
 图中断层出现的原因是产品成熟度迟迟没有跟上，用户过来以后发现都是坑，随之而来的各种差评会让早期支持者和创始人疲于奔命甚至而失去兴趣。
-**对于一个开源软件，断层的体现可能是经历早期快速增长后，来到长达 1~2 年的静默期，增长几乎停滞。**对于社区来说，几乎所有的精力都用在给早期用户填坑，期间会有用户自然增长但流失率也非常高。这个阶段对于资源的消耗非常大，社区的核心贡献者也会非常累，如果熬不过去就死了，所以说是“死亡鸿沟”。...</p>
-  </section>
-  <footer class="entry-footer"><span title='2021-12-03 12:09:52 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
-  <a class="entry-link" aria-label="post link to In Community We Trust" href="http://c4pt0r.github.io/posts/in-community-we-trust/"></a>
-</article>
-    </main>
+**对于一个开源软件，断层的体现可能是经历早期快速增长后，来到长达 1~2 年的静默期，增长几乎停滞。**对于社区来说，几乎所有的精力都用在给早期用户填坑，期间会有用户自然增长但流失率也非常高。这个阶段对于资源的消耗非常大，社区的核心贡献者也会非常累，如果熬不过去就死了，所以说是“死亡鸿沟”。</description>
+    </item>
     
-<footer class="footer">
-    <span>&copy; 2021 <a href="http://c4pt0r.github.io">Random Access Memroy</a></span>
-    <span>
-        Powered by
-        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
-        <a href="https://git.io/hugopapermod" rel="noopener" target="_blank">PaperMod</a>
-    </span>
-</footer>
-<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
-        <path d="M12 6H0l6-6z" />
-    </svg>
-</a>
-
-<script>
-    let menu = document.getElementById('menu')
-    if (menu) {
-        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
-        menu.onscroll = function () {
-            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
-        }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            var id = this.getAttribute("href").substr(1);
-            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
-                    behavior: "smooth"
-                });
-            } else {
-                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
-            }
-            if (id === "top") {
-                history.replaceState(null, null, " ");
-            } else {
-                history.pushState(null, null, `#${id}`);
-            }
-        });
-    });
-
-</script>
-<script>
-    var mybutton = document.getElementById("top-link");
-    window.onscroll = function () {
-        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
-            mybutton.style.visibility = "visible";
-            mybutton.style.opacity = "1";
-        } else {
-            mybutton.style.visibility = "hidden";
-            mybutton.style.opacity = "0";
-        }
-    };
-
-</script>
-<script>
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        if (document.body.className.includes("dark")) {
-            document.body.classList.remove('dark');
-            localStorage.setItem("pref-theme", 'light');
-        } else {
-            document.body.classList.add('dark');
-            localStorage.setItem("pref-theme", 'dark');
-        }
-    })
-
-</script>
-</body>
-
-</html>
+  </channel>
+</rss>
