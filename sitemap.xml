@@ -2,13 +2,28 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://c4pt0r.github.io/posts/the-future-of-db-2021/</loc>
-    <lastmod>2021-12-03T12:54:20+08:00</lastmod>
-  </url><url>
     <loc>http://c4pt0r.github.io/posts/</loc>
-    <lastmod>2021-12-03T12:54:20+08:00</lastmod>
+    <lastmod>2021-12-03T13:06:04+08:00</lastmod>
   </url><url>
     <loc>http://c4pt0r.github.io/</loc>
+    <lastmod>2021-12-03T13:06:04+08:00</lastmod>
+  </url><url>
+    <loc>http://c4pt0r.github.io/posts/dx-in-system-software-1/</loc>
+    <lastmod>2021-12-03T13:06:04+08:00</lastmod>
+  </url><url>
+    <loc>http://c4pt0r.github.io/posts/distributed-system-in-2010s-4/</loc>
+    <lastmod>2021-12-03T13:01:56+08:00</lastmod>
+  </url><url>
+    <loc>http://c4pt0r.github.io/posts/distributed-system-in-2010s-3/</loc>
+    <lastmod>2021-12-03T13:00:47+08:00</lastmod>
+  </url><url>
+    <loc>http://c4pt0r.github.io/posts/distributed-system-in-2010s-2/</loc>
+    <lastmod>2021-12-03T12:59:16+08:00</lastmod>
+  </url><url>
+    <loc>http://c4pt0r.github.io/posts/distributed-system-in-2010s-1/</loc>
+    <lastmod>2021-12-03T12:58:03+08:00</lastmod>
+  </url><url>
+    <loc>http://c4pt0r.github.io/posts/the-future-of-db-2021/</loc>
     <lastmod>2021-12-03T12:54:20+08:00</lastmod>
   </url><url>
     <loc>http://c4pt0r.github.io/posts/observability-keyviz/</loc>

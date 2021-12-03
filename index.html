@@ -128,6 +128,91 @@
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>做出让人爱不释手的基础软件：可观测性和可交互性
+    </h2>
+  </header>
+  <section class="entry-content">
+    <p>最近有一件事情让我印象特别深刻，作为引子和大家唠一唠：我们在内部做一些极端的流量回归仿真实验时，在 TiKV（TiDB 的分布式存储组件）上观测到了异常的 CPU 使用率，但是从我们的 Grafana Metrics、日志输出里面并没有看到异常，因此也一度困惑了好几天，最后靠一位老司机盲猜并结合 profiling 才找到真凶，真凶出现在谁都没有想到的地方：Debug 用的日志模块（澄清一下：目前这个 Bug 已经修复了，而且这个 Bug 的触发是在非常极端压力的场景下&#43;日志级别全开才会出现，请各位用户放心）。
+这篇文章并不是做 Bug 分析，我觉得更重要的是，找问题过程中我们使用的工具、老司机的思考过程。作为一个观察者，我看到年轻的同事看着老司机熟练地操作 perf 和在各种各样工具和界面中切换那种仰慕的眼神，我隐约觉得事情有点不对：这意味着这门手艺不能复制。
+事后，我做了一些关于基础软件用户体验的调研，发现该领域的理论和资料确实挺少（大多数是 ToC 产品的研究，系统软件相关的大概只有 UNIX 哲学流派），而且缺乏系统化，依赖于作者个人「品味」，但是软件体验的好和坏显然存在，例如一个有经验的工程师看到一个命令行工具，敲几下就知道是否好用，是不是一个有「品味」的工具。
+很多时候「品味」之所以被称为「品味」，就是因为说不清道不明，这固然是软件开发艺术性的一种体现，但是这也意味着它不可复制，不易被习得。我觉得这也不好，今天这篇以及可能接下来的几篇文章（虽然后几篇我还不知道写啥，但是先立个 Flag）会试着总结一下好的基础软件体验到底从哪里来。
+作为第一篇，本文将围绕可观测性和可交互性两个比较重要的话题来谈。至于为什么把这两点放在一起聊，我先卖个关子，最后说。
+可观测性 可观测性是什么？这可从我两年前发表的 《我眼中的分布式系统可观测性》 [1]一文中可见一斑，相同的内容我在这里就不赘述。随着在 TiDB 中对可观测性实践的深入，对这个话题有了更深的理解，为了更好的理解，我们首先先明确一个问题：当我们在聊可观测的时候，到底是谁在观测？
+是谁在观测？ 很多朋友可能会一愣，心想：这还用说，肯定是人，总不能是机器。没错，的确是人在观测，但就是这么一个浅显的道理往往会被软件设计者忽略，所以这两者的区别到底是什么？为什么强调人这个主体很重要？
+要回答这个问题，需要清楚一个现实：人的短期工作记忆是很有限的。大量的心理学研究表明，人类工作记忆的容量大致只有 4，即在短期同时关注 4 项信息 [2]，再多的信息就要靠分模块的方式记忆，如我们快速记忆电话号码的方式，以 13800001111 为例，我们通常不是一个个数字背，而是形如：138-0000-1111 进行分组。
+在了解人的心智模型的一些基础假设和带宽后，我想很多系统软件开发者大概不再会炫耀：我的软件有 1000 多个监控项！这不仅不是好事，反而让更多的信息破坏了短期记忆的形成，引入了更多的噪音，让使用者在信息的海洋里花很多时间找关键信息，以及不自觉的分类（我相信大脑的一个不自觉的后台任务就是对信息建索引和分类，注意这同样是消耗带宽的），所以第一个结论：软件应用一屏的界面里面最好只有 4 个关键信息。那么，接下来的一个问题是：哪些是关键信息？什么是噪音？
+区分关键信息和噪音 这个问题没有标准答案。对于系统软件来说，我的经验是：跟着关键资源走。软件其实很简单，本质就是对硬件资源的使用和分配，讲究平衡的艺术。关键的硬件资源无非也就下面几个，对于下面每一个关键资源在某个采样时间段（单点没有太多意义），都可以通过一些简单的问题的询问，得到对系统运行状态的大致图景：
+ CPU：哪些线程在工作？这些线程都在干嘛？这些线程各自消耗了多少 CPU Time？ 内存：当前内存中存储了哪些东西？这些东西的命中率情况？（通常我们更关注业务缓存）？ 网络 I/O：QPS/TPS 有异常吗？当前主要的网络 I/O 是由什么请求发起的？带宽还够吗？请求延迟？长链接还是短链接（衡量 syscall 的开销）？ 磁盘 I/O：磁盘在读写文件吗？读写哪些文件？大多数的读写是什么 Pattern？吞吐多大？一次 I/O 延迟多大？ 关键日志：不是所有日志都有用，只有包含特定关键字的日志，人们才会关心。所以，有没有特定关键字的日志出现？  通过以上标准问题的灵魂拷问，必定可以对系统运行状态有一定的了解。...</p>
+  </section>
+  <footer class="entry-footer"><span title='2021-12-03 13:06:04 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;Ed Huang</footer>
+  <a class="entry-link" aria-label="post link to 做出让人爱不释手的基础软件：可观测性和可交互性" href="http://c4pt0r.github.io/posts/dx-in-system-software-1/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>分布式系统 in 2010s ：测试和运维
+    </h2>
+  </header>
+  <section class="entry-content">
+    <p>我觉得面对测试的态度是区分一个普通程序员和优秀程序员的重要标准。现如今我们的程序和服务越来越庞大，光是单元测试 TDD 之类的就已经很难保证质量，不过这些都是 baseline，所以今天聊点新的话题。
+说测试之前，我们先问下自己，为什么要测试？当然是为了找 Bug。看起来这是句废话，但是仔细想想，如果我们能写出 Bug-free 的程序不就好了吗？何必那么麻烦。不过 100% 的 Bug-free 肯定是不行的，那么我们有没有办法能够尽可能地提升我们程序的质量？举个例子，我想到一个 Raft 的优化算法，与其等实现之后再测试，能不能在写代码前就知道这个算法理论上有没有问题？办法其实是有的，那就是形式化证明技术，比较常用的是 TLA&#43;。
+TLA&#43; TLA&#43; 背后的思想很简单，TLA&#43; 会通过一套自己的 DSL（符号很接近数学语言）描述程序的初始状态以及后续状态之间的转换关系，同时根据你的业务逻辑来定义在这些状态切换中的不变量，然后 TLA&#43; 的 TLC model checker 对状态机的所有可达状态进行穷举，在穷举过程中不断检验不变量约束是否被破坏。
+举个简单的例子，分布式事务最简单的两阶段提交算法，对于 TLA&#43; Spec 来说，需要你定义好初始状态（例如事务要操作的 keys、有几个并发客户端等），然后定义状态间跳转的操作（ Begin / Write / Read / Commit 等），最后定义不变量（例如任何处于 Committed 状态的 write ops 一定是按照 commit timestamp 排序的，或者 Read 的操作一定不会读到脏数据之类的），写完以后放到 TLC Checker 里面运行，等待结果就好。
+但是，我们活在一个不完美的世界，即使你写出了完美的证明，也很难保证你就是对的。第一， Simulator 并没有办法模拟出无限多的 paticipants 和并发度， 一般也就是三五个；第二，聪明的你可能也看出来了，一般 TLA&#43; 的推广文章也不会告诉你 Spec 的关键是定义不变量，如果不变量定义不完备，或者定义出错，那么证明就是无效的。因此，我认为形式化验证的意义在于让工程师在写代码之前提高信心，在写证明的过程中也能更加深对算法的理解，此外，如果在 TLC Checker 里就跑出异常，那就更好了。
+目前 PingCAP 应该是国内唯一一个使用 TLA&#43; 证明关键算法，并且将证明的 Spec 开源出来的公司，大家可以参考 pingcap/tla-plus 这个 Repo，以及我们的首席架构师唐刘的这篇 博客 了解更多。...</p>
+  </section>
+  <footer class="entry-footer"><span title='2021-12-03 13:01:56 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
+  <a class="entry-link" aria-label="post link to 分布式系统 in 2010s ：测试和运维" href="http://c4pt0r.github.io/posts/distributed-system-in-2010s-4/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>分布式系统 in 2010s ：硬件的进化
+    </h2>
+  </header>
+  <section class="entry-content">
+    <p>上篇 我们聊了软件构建方式和演化，今天我们来聊聊硬件吧！
+SSD 普及的深远影响 如果说云的出现是一种商业模式的变化的话，驱动这个商业革命的推手就是最近十年硬件的快速更新。比起 CPU，存储和网络设备的进化速度更加迅速。最近五年，SSD 的价格 (包括 PCIe 接口) 的成本持续下降，批量采购的话已经几乎达到和 HDD 接近的价格。
+图 1 近 5 年 SSD 成本曲线
+SSD 的普及，对于存储软件厂商的影响是深远的。
+其一，是极大地缓解了 IO 瓶颈。对于数据库厂商来说，可以将更多的精力花在其他事情，而不是优化存储引擎上。最近两年发生了一些更大的变化，NVMe 正在成为主流，我们很早就在 Intel Optane 进行实验和投资，类似这样的非易失内存的技术，正在模糊内存和存储的界限，但是同时对开发者带来挑战也是存在的。举一个简单的例子，对于 Optane 这类的非易失内存，如果你希望能够完全利用它的性能优势，最好使用类似 PMDK 这类基于 Page cache Bypass 的 SDK 针对你的程序进行开发，这类 SDK 的核心思想是将 NVM 设备真正地当做内存使用。如果仅仅将 Optane 挂载成本地磁盘使用，其实很大程度上的瓶颈不一定出现在硬件本身的 IO 上。
+下面这张图很有意思，来自 Intel 对于 Optane 的测试，我们可以看见在中间那一列，Storage with Optane SSD，随机读取的硬件延迟已经接近操作系统和文件系统带来的延迟，甚至 Linux VFS 本身会变成 CPU 瓶颈。其实背后的原因也很简单，过去由于 VFS 本身在 CPU 上的开销（比如锁）相比过去的 IO 来说太小了，但是现在这些新硬件本身的 IO 延迟已经低到让文件系统本身开销的比例不容忽视了。
+图 2 Intel 对于 Optane 的测试...</p>
+  </section>
+  <footer class="entry-footer"><span title='2021-12-03 13:00:47 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
+  <a class="entry-link" aria-label="post link to 分布式系统 in 2010s ：硬件的进化" href="http://c4pt0r.github.io/posts/distributed-system-in-2010s-3/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>分布式系统 in 2010s ：软件构建方式和演化
+    </h2>
+  </header>
+  <section class="entry-content">
+    <p>我上大学的时候专业是软件工程，当时的软件工程是 CMM、瀑布模型之类。十几年过去了，看看现在我们的软件开发模式，尤其是在互联网行业，敏捷已经成为主流，很多时候老板说业务下周上线，那基本就是怎么快怎么来，所以现代架构师对于可复用性和弹性会有更多的关注。我所知道业界对 SOA 的关注是从 Amazon 的大规模 SOA 化开始， 2002 年 Bezos 要求 Amazon 的工程团队将所有的业务 API 和服务化， 几条原则 放在今天仍然非常适用：
+  All teams will henceforth expose their data and functionality through service interfaces. Teams must communicate with each other through these interfaces. There will be no other form of inter-process communication allowed: no direct linking, no direct reads of another team’s data store, no shared-memory model, no back-doors whatsoever. The only communication allowed is via service interface calls over the network....</p>
+  </section>
+  <footer class="entry-footer"><span title='2021-12-03 12:59:16 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
+  <a class="entry-link" aria-label="post link to 分布式系统 in 2010s ：软件构建方式和演化" href="http://c4pt0r.github.io/posts/distributed-system-in-2010s-2/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
+    <h2>分布式系统 in 2010s ：存储之数据库篇
+    </h2>
+  </header>
+  <section class="entry-content">
+    <p>回看这几年，分布式系统领域出现了很多新东西，特别是云和 AI 的崛起，让这个过去其实不太 sexy 的领域一下到了风口浪尖，在这期间诞生了很多新技术、新思想，让这个古老的领域重新焕发生机。站在 2010s 的尾巴上，我想跟大家一起聊聊分布式系统令人振奋的进化路程，以及谈一些对 2020s 的大胆猜想。
+无论哪个时代，存储都是一个重要的话题，今天先聊聊数据库。在过去的几年，数据库技术上出现了几个很明显的趋势。
+存储和计算进一步分离 我印象中最早的存储-计算分离的尝试是 Snowflake，Snowflake 团队在 2016 年发表的论文 《The Snowflake Elastic Data Warehouse》 是近几年我读过的最好的大数据相关论文之一，尤其推荐阅读。Snowflake 的架构关键点是在无状态的计算节点 &#43; 中间的缓存层 &#43; S3 上存储数据，计算并不强耦合缓存层，非常符合云的思想。从最近 AWS 推出的 RedShift 冷热分离架构来看，AWS 也承认 Snowflake 这个搞法是先进生产力的发展方向。另外这几年关注数据库的朋友不可能不注意到 Aurora。不同于 Snowflake，Aurora 应该是第一个将存储-计算分离的思想用在 OLTP 数据库中的产品，并大放异彩。Aurora 的成功在于将数据复制的粒度从 Binlog降低到 Redo Log ，极大地减少复制链路上的 IO 放大。而且前端复用了 MySQL，基本做到了 100% 的应用层 MySQL 语法兼容，并且托管了运维，同时让传统的 MySQL 适用范围进一步拓展，这在中小型数据量的场景下是一个很省心的方案。
+虽然 Aurora 获得了商业上的成功，但是从技术上，我并不觉得有很大的创新。熟悉 Oracle 的朋友第一次见 Aurora 的架构可能会觉得和 RAC 似曾相识。Oracle 大概在十几年前就用了类似的方案，甚至很完美的解决了 Cache Coherence 的问题。另外，Aurora 的 Multi-Master 还有很长的路要走，从最近在 ReInvent 上的说法来看，目前 Aurora 的 Multi-Master 的主要场景还是作为 Single Writer 的高可用方案，本质的原因应该是目前 Multi-Writer 采用乐观冲突检测，冲突检测的粒度是 Page，在冲突率高的场合会带来很大的性能下降。...</p>
+  </section>
+  <footer class="entry-footer"><span title='2021-12-03 12:58:03 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
+  <a class="entry-link" aria-label="post link to 分布式系统 in 2010s ：存储之数据库篇" href="http://c4pt0r.github.io/posts/distributed-system-in-2010s-1/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>[演讲] The Future of Database 2021
     </h2>
   </header>
