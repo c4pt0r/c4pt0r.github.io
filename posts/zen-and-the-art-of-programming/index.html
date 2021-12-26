@@ -256,14 +256,12 @@
 </ul>
 <p>可能你会问：就这么一个看上去如此弱智的游戏，能玩出什么花样来？</p>
 <p>那我接下来要说的可能会让你大吃一惊，已经被证明，生命游戏中可以构造出通用图灵机，也就是说，通过这个游戏，你可以实现在计算机上能够实现的一切，只要你愿意，你甚至可以用生命游戏模拟出一台计算机，在这个表格上实现一个操作系统和文本编辑器，然后构造出我写这篇文字需要的一切软件，或者实现一个深度学习系统，例如 实现一个 AlphaGo 在围棋上胜过人类最强的棋手，没错就是在这么一个二维的表格上加上 5 条规则。</p>
-<p><img loading="lazy" src="https://pingcap.feishu.cn/space/api/box/stream/download/asynccode/?code=Nzc1YTE5NDE3MzljOWFlNjgzMjAwMmFmNzI3ZDhiNTFfTk1KSjI5V0hXQjV2bG84MGtuU3VYSnozTndMakZCdFFfVG9rZW46Ym94Y25VZXB2UkhQanplQkpDMXJpVWx6WGtiXzE2NDA1MDI4MjA6MTY0MDUwNjQyMF9WNA" alt="img"  />
-</p>
+<img src="/imgs/zen-1.gif" alt="image-20211203123520678" style="zoom:50%;" />
 <p>注意，生命游戏的广度并不局限于实现图灵机，是否蕴含更多关于计算模型的可能性？没有答案。<strong>只是如此深邃复杂的宇宙就是由如此简单的规则构成，本身就是一件很美的事情，对吧？</strong>（另外关于在生命游戏的一个 Fun Fact 是，在游戏中构造逻辑门的生成模式叫做：滑翔机，这个图案也常被作为 Hacker 的 Logo，<strong><a href="https://www.bilibili.com/video/BV1T541157s7/?spm_id_from=333.788.recommend_more_video.2">https://www.bilibili.com/video/BV1T541157s7/?spm_id_from=333.788.recommend_more_video.2</a></strong>）。</p>
 <h3 id="λ-calculus-和-y-combinator">λ-Calculus 和 Y-Combinator<a hidden class="anchor" aria-hidden="true" href="#λ-calculus-和-y-combinator">#</a></h3>
 <p>第二个例子仍然是一个关于计算理论的例子： λ 演算。这个被作为计算之美的一个具体的体现，虽然它和图灵机是等价的，但是在爱好者圈子里通常对它的美学价值更加的推崇（我感觉？），我猜背后的原因大概是图灵机的抽象充满了一股机械主义的气息，而 λ 演算从名字就看得出来就带着纯理论那种的高级感吧 😂（当然图灵机的抽象也很简洁）。λ 演算大概就是数学中的函数换个写法再加几个规则, 例如 f(x) = x , 这么一个函数，通过 λ 演算的书写方式，就是 λx.x。λ 演算的核心规则就两条（注：可能有朋友会问 η 归约哪去了？其实 η 归约在完备性上不是必要的）分别叫：α 转换和 β 归约，听起来很高级，但是实际是简单的吓人：所谓 α 转换就是一个函数的自变量名字叫做 x 还是 y 还是 z 无所谓；所谓  β 归约，就是函数的变量可以带入一个值进行计算，相当于 Apply 函数的过程，表达方式是一个括号。具体 λ 演算能做什么我就不赘述了，和上面一样，图灵机能做的都能做。 提到美，在 λ 演算中经常被拉出来溜溜的大概就是 Y-Combinator（下面简称 YC），没错，就是 YC 的那个 YC，因为这个东西过于优雅，以至于 Paul Graham 搞基金的时候直接拿过去当名字了。</p>
 <p>下面我试一下尽可能用人话把 YC 讲明白（不想看的跳过这段也没有任何问题）：我们已经知道大概 λ 演算是和我们在数学里面的函数接近的例如 f(x) = x, 但是注意到：λ 演算的定义都是匿名函数（如：λx.x）并没有一个叫做 f 的名字，如果我们希望实现递归函数怎么办呢？也就是自己调用自己？这里插播介绍一个概念：不动点，也很简单，所有满足 f(x) = x 的 x 都叫做 f 的不动点。想象一下，如果 x 作为一个函数带入，输出一个函数，这个函数和传入的 x 是等价的函数，我们不就可以把自己给‘算’出来了吗？所以把 YC 想象成就是一个传入参数是 f 返回 f 的不动点函数的函数（有点绕）。当然看不懂也没关系，静静的观赏一下 YC 吧：</p>
-<p><img loading="lazy" src="https://pingcap.feishu.cn/space/api/box/stream/download/asynccode/?code=MzkzNDk3NmY4MjI0OTE0YTAzYjI1ZTQ0ZGY0OTg3MzRfaVNUSXNrdTNnYmVYeVVTSFY5MGhXaGhOOWJpOTF2SHdfVG9rZW46Ym94Y25FVEFkM2NqU21yVFVVQnhwUUJxNTN1XzE2NDA1MDI4MjA6MTY0MDUwNjQyMF9WNA" alt="img"  />
-</p>
+<img src="/imgs/zen-yc.png" alt="image-20211203123520678" style="zoom:100%;" />
 <p>一切这些优雅的东西都是构建在上面几条简单演算规则之上。</p>
 <h3 id="actor-模式">Actor 模式<a hidden class="anchor" aria-hidden="true" href="#actor-模式">#</a></h3>
 <p>说了两个纯理论的例子，其实这样纯粹的抽象带来的美学在更软件工程的味道的领域也不少见，让我们看看分布式系统里面的一个常用的设计模式：Actor 模式。Actor 模式大约在上世纪 70 年代由 Carl Hewitt 等人作为研究并行计算理论的工具被提出，后来在 Erlang OTP 和 Scala Akka 被发扬光大。我之前的一篇文章提到可观测性的时候略微提及了周期的概念，程序的逻辑其实就是一个又一个的‘循环’嵌套起来，Actor 模式就是利用了这一点：万物皆是 Actor，每一个 Actor 都是一个无限的循环，这个循环对不同的事件的到来，可以做出以下几种反馈：</p>
@@ -273,8 +271,7 @@
 <li>根据收到事件，决定下一条事件的内容</li>
 </ul>
 <p>不管多么复杂的业务逻辑，都能归约到 Actor 上，篇幅有限举一个特别简单的例子，由 Actor 模型构建的 Web Service 服务（假设需要访问数据库），大概分为 2 类 Actor：处理 HTTP 请求的 Actor，以及处理 DAO（Data Access Object）访问数据库的 Actor。对于第一类 Actor 来说是一个不停接收客户端请求事件，持久化请求，当收到连接可读写的事件后读取并对 HTTP 请求的内容进行处理，如果是需要访问数据库的事件，发送给负责数据库处理的 Actor，当收到数据库处理的 Actor 的回应事件后，返回客户端；对于 DAO Actor，收到的数据库访问请求的时候访问数据库，然后向请求的 Actor 返回包含结果的消息事件。与 Actor 类似的思想还有 Tony Hoare 的 CSP (communicating sequential processes) 模型，甚至在 Go 语言中 Goroutine / Channel 的模式也是一点 Actor 和 CSP 的影子。</p>
-<p><img loading="lazy" src="https://pingcap.feishu.cn/space/api/box/stream/download/asynccode/?code=NGMyNGVkY2Q5MDI0MWFkNjFhNjUwY2UwNDYxZDQ2YTVfWXVHNTRuSlQ0am1HZjVhenh1dEVScmxEUWZnSHloZFJfVG9rZW46Ym94Y25RSktwckhjelZaMW5YZEYyQXhwdkdlXzE2NDA1MDI4MjA6MTY0MDUwNjQyMF9WNA" alt="img"  />
-</p>
+<img src="/imgs/zen-2.png" alt="image-20211203123520678" style="zoom:100%;" />
 <p>Actor 模型优雅的地方不仅仅在于通过一套简单统一的范式来表达复杂的逻辑，更重要的是从消除了单机和集群的区别，大家仔细想，Actor 并没有规定与其通信的其他的 Actor 在哪，与之对应的 Mutex 和信号量通常带着单机色彩（Spinlock 本质上是通过控制锁对象的所有权实现互斥），Actor 就没有这个问题，而且很天然的对负载均衡友好，不过上面的第三条原则实际上暗示了 Actor 要处理自身状态持久化的问题，虽然实际的工程中，完全纯粹的 Actor 模型的系统也不多见，也经常被人诟病性能问题和 Actor 的拆分粒度问题（太细了冗余增加通信的复杂度，太粗了形成单点则失去了 Actor 的意义），但是作为一种思考分布式系统的角度，Actor 是受启发于现实的物理世界，我们和世界发生交互的方式正是通过语言（消息）和异步的，从某种程度上来说 Actor 是对我们自己的建模。</p>
 <h3 id="the-zen-of-tikv">The Zen of TiKV<a hidden class="anchor" aria-hidden="true" href="#the-zen-of-tikv">#</a></h3>
 <p>刚才提到了的 Actor 的时候为状态留下了一个伏笔，每个 Actor 需要关注自己的状态，但是状态一向是优雅系统的大敌，尤其是叠加上分布式/Failover/一致性之类的要求之后，这里每一个要求都不简单，叠加在一起就变成了复杂性爆炸的状态，TiKV 作为 TiDB 的存储层的核心，就是为了解决这个问题。就像前面提到的，东方审美的精髓是用简单对抗复杂。TiKV 是一个支持跨行事务的分布式的 Key-Value Database，这个世界上的 KV 数据库已经那么多了，Why another？如果说从设计的优雅程度来说，TiKV 一定是在不错的那一批，所以这个数据库的优雅在哪？在分析之前，我先放一首当时自己写的诗（为了致敬 Python 的 import this）TiKV 是构建在下面这 10 条规则：</p>
@@ -296,8 +293,7 @@
 <p>最后一个例子来自我特别喜欢的一个操作系统：Plan9。</p>
 <p>这一小节我想了很久，竟然不知道该如何下笔，因为 Plan9 的设计实在超前时代太多，这种感觉就像看到一个非常震撼的艺术品，你的第一反应其实会是愣住，有千言万语没法说出来，不过拖了好几个礼拜觉得总这么拖着也不好，就硬着头皮写一下。</p>
 <p>Plan9 大概要从它的历史说起，Plan9 脱胎于贝尔实验室，没错 ，就是那个诞生了 UNIX 和 C 语言的地方，而且 Plan9 的设计团队的领导者正是 Rob Pike 和 Ken Thompson，诞生的定位就是一个&rsquo;更好的&rsquo; UNIX。主要是为了解决 UNIX 的一个问题，其哲学里面虽然有：一切皆是文件，但是随着时间的发展，新的模块不停的加入，对这条原则开始没有那么的坚守，一个例子：TCP/IP 协议栈和 BSD-Style Socket，回想当初学网络编程的时候，学习到 socket 的时候就觉得有点别扭，socket 的 API 长得有点像 UNIX 的文件系列的 API，但是名字和行为却有点不一样，而且 socket 很显然不是一个文件，我相信很多开发者有过同样的困惑。其实 Plan9 就是希望将这条哲学带回来并严格的贯彻，例如刚才网络的例子，我们看看 Plan9 是如何处理的：</p>
-<p><img loading="lazy" src="https://pingcap.feishu.cn/space/api/box/stream/download/asynccode/?code=NGU4NzA4ZDg2ZTBlODFhNGVlMTIzNWE2MjY0NWE5NjZfaldPWGRCc2hsRkZoRVB4ZWZvazRkM1ZiZHRMbzdoTWZfVG9rZW46Ym94Y24xbVFxdEQ0Y3RneWFQaHVWNkp1eFJmXzE2NDA1MDI4MjA6MTY0MDUwNjQyMF9WNA" alt="img"  />
-</p>
+<img src="/imgs/zen-3.png" alt="image-20211203123520678" style="zoom:50%;" />
 <p>(在 Plan9 中完全用 shell 操作模拟 HTTP 的过程，全程都是用文件操作的命令)</p>
 <p>Plan9 另外一个超前的设计是：这是一个面向纯分布式环境设计的操作系统，我一直觉得分布式应该是一个和操作系统抽象无关的特性，一个很好的例子就是 plan9 的文件系统：9pfs。9pfs 的设计是可以作为一个分布式文件系统，也就是你可以 mount 一块远程的文件夹，分布式存储细节全部也隐藏在了文件系统的抽象之下；更绝的是，我们现在经常提到的「计算存储分离」，在 plan9 中已经都落地了（90年代初），plan9 把机器分成几种类型：cpu servers（计算密集型），file servers（IO 密集），terminal servers (终端)；通过 rcpu 在本机里面会启动一个新的 term，类似 ssh，然后将本地的文件系统挂载给远端的 cpu server 上，相当于给本地的机器换了个 CPU，这是我见过最简洁和最完整的计算存储分离。</p>
 <p>其实 Plan9 从某种意义上来说间接影响了我们现代的分布式系统设计，原因是其实这帮大牛作者（Rob Pike，Ken 等人）从贝尔实验室离开后加入了 Google 搞 Infra，其实仔细看看 Borg / GFS(Colossus)，以及 Google 内部很多服务都是一股浓浓的 plan9 的味道：通过文件系统作为抽象屏蔽掉分布式的细节。Google 的这些系统通过一篇篇论文影响着整个行业，从这个角度看，plan9 也算成功了。</p>
