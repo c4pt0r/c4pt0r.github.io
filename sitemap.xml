@@ -2,13 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://c4pt0r.github.io/posts/dynamodb-2022/</loc>
-    <lastmod>2022-08-18T12:58:03+08:00</lastmod>
+    <loc>http://c4pt0r.github.io/posts/build-database-in-2020s/</loc>
+    <lastmod>2022-12-21T11:54:05+08:00</lastmod>
   </url><url>
     <loc>http://c4pt0r.github.io/posts/</loc>
-    <lastmod>2022-08-18T12:58:03+08:00</lastmod>
+    <lastmod>2022-12-21T11:54:05+08:00</lastmod>
   </url><url>
     <loc>http://c4pt0r.github.io/</loc>
+    <lastmod>2022-12-21T11:54:05+08:00</lastmod>
+  </url><url>
+    <loc>http://c4pt0r.github.io/posts/dynamodb-2022/</loc>
     <lastmod>2022-08-18T12:58:03+08:00</lastmod>
   </url><url>
     <loc>http://c4pt0r.github.io/posts/tidb-5-x-in-pm-s-eye/</loc>

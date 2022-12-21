@@ -18,7 +18,7 @@
 <link rel="mask-icon" href="http://c4pt0r.github.io/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<meta name="generator" content="Hugo 0.101.0" />
+<meta name="generator" content="Hugo 0.108.0">
 <link rel="alternate" type="application/rss+xml" href="http://c4pt0r.github.io/posts/index.xml">
 <noscript>
     <style>
@@ -132,6 +132,26 @@
 
 <article class="post-entry"> 
   <header class="entry-header">
+    <h2>Building a database in the 2020s
+    </h2>
+  </header>
+  <section class="entry-content">
+    <p>英文原版
+好久没写东西，分享一下最近思考的比较多的东西，就当是工作记录了。
+从一个很重要的问题出发：如果在今天，我们从新设计一个 Database，架构会是什么样子？
+在进入到具体的技术设计之前，我先分享一下我理解的当今（以及未来）的开发者对于数据库的期待：
+Cost-effective，极致的 Pay-as-you-go，无论是私有云/混合云，还是公有云，云原生的理念在渗透几乎所有的基础软件，能够弹性的利用基础设施是节省成本的关键，谁不喜欢更便宜的东西，我用了多少就给多少钱。另外有着稳定流量的对于性能极端敏感的业务我们另一个话题讨论（因为这种情况下 Serverless 反而可能会更贵）。 Ease-of-Use, 易用，使用起来越简单越好，最好把所有基础设施的细节都隐藏掉，极低的心智负担带来极低的上手体验和价值确认。另外我认为目前 SQL 仍然是构建应用最简单的数据库接口，另外对于开发者来说，Modern CLI 体验也是很重要。 Unified，这点稍微需要解释一下，如果说第二点是从终端的开发者体验来说，那么这条其实想表达的是：架构的简化，我们这些年发明了太多的数据处理技术，即使做一个普通的应用，可能都要使用 n 种数据库和数据仓库，更头疼的是，规模小的情况和规模大的情况下，很难通过一套方案解决（尽管你的业务形态并没有显著的变化），所以很可能在业务快速增长的时候，开发者需要花费大量的时间进行的基础设施的重构（例如分库分表，或者选用扩展性更好 NoSQL 什么的），这是一个很大的痛点，我们要解决它。 针对上面这些趋势和痛点，映射到技术上：
+内核上使用云原生是架构改造，不仅是存算分离，而是能分离的都分离，因为现在我们要做的已经不再是一个软件，而是一个服务，用户也不会关心服务背后的东西，下面会讲。 将 Serverless 作为最终的产品形态（注意：Serverless 并不是技术，而是产品形态），反向倒推架构演进路径。 对于新一代的数据库来说，HTAP 是必选的技术路线，一个预言：未来的数据库都会是 HTAP 数据库。只有纯 AP 对于业务来说是不完整的，TP 非常重要。 带着这些假设，过去这一年，大概做的工作总结一句话就是把： TiDB 大卸八块，然后利用云的基础设施，将它从新拼装起来变成一个数据库服务。最近低调的发布了 TiDB Serverless Tier 就是这个新引擎的第一次亮相。下面聊聊一些技术和工程上的思考。
+做服务而不是做软件 今天做数据库，如果你不提供云服务，出门都不太好意思和人打招呼（很快就会是 Serverless）。有很多人（尤其是数据库内核开发者）会低估做一个云服务的复杂性，经典的论调：‘不就是在云上的自动化部署吗？’ 或者 ‘支持一下 Kubernetes Operator？’…其实并不是，甚至目标都应该反过来：**我们要做的并不是一个数据库软件，而是一个数据库服务，当我们用更长的眼光去看的时候就会发现，后者是包含前者的。**这个认知的转变是做好数据库云服务第一步，也是最重要的一步。
+我们过去开发程序，不同的模块看到的环境是同构且确定的，例如：开发一个单机上运行的软件，不同的模块虽然可以有逻辑上的边界，但是链接到一起之后，运行起来看到的还是这台计算机的一亩三分地，Everything is a trade-off。即使近几年的分布式系统的兴起，但对于经典的分布式软件来说，大致还是单机软件设计思路的延伸，只是通过 RPC 将多台计算机连接在一起，但是仍然环境是相对确定的，尽管很多软件对于底层的环境变化做了一些适配：例如分布式数据库的动态扩容，数据重均衡 Re-balance 等，但是本质并未变化，只是能够操控和调度的资源变多了。但是在云上，这些假设都发生了变化：
+多样且几乎无限的资源通过 Service API 的形式提供，对于资源的调度和分配可以通过代码完成，这是革命性的变革。 一切资源明码标价，所以程序优化的方向从过去的一维的榨取最好的性能（因为硬件的成本已经事先支付），变成一个动态的问题：尽量花小钱办大事。 假设的变化带来的技术上的变化：云上的数据库，首先应该是多个自治的微服务组成的网络。这里的微服务并非一定是在不同的机器上，在物理上可能在一台机器上，但是需要能在远程访问，另外这些服务应该是无状态的（无副作用），方便快速的弹性扩展，这个带来对于开发者的转变就是：放弃对于同步语义的坚持，这个世界是异步化且不可靠的。我很高兴我的偶像 Amazon 的 CTO Werner Vogels 在今年 ReInvent Keynote 上也强调了这一点。放弃掉对于同步和单机的幻想，得到了什么？我们看一些例子：...</p>
+  </section>
+  <footer class="entry-footer"><span title='2022-12-21 11:54:05 +0800 CST'>December 21, 2022</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
+  <a class="entry-link" aria-label="post link to Building a database in the 2020s" href="http://c4pt0r.github.io/posts/build-database-in-2020s/"></a>
+</article>
+
+<article class="post-entry"> 
+  <header class="entry-header">
     <h2>DynamoDB 2022 论文解读
     </h2>
   </header>
@@ -142,7 +162,7 @@
 可预测的性能意味着首先要可衡，我常常面对一些有点哭笑不得的场景，经常有人问我：TiDB 能支持多少 QPS/TPS？这个问题实在没办法回答，因为不谈 Workload 的前提下，这个问题是没办法回答的。
 所以 DynamoDB 如果要做到提供可预测的性能，第一步是对 Workload 本身进行抽象，这就引入了 RCU，WCU 的概念，其实 RCU 和 WCU 和传统意义的 QPS 很接近，只是增加了操作的对象的大小，这样一来就可以做相对精准的 Workload 规划，例如：1 WCU = 1KB 对象 1 OPS，那么如果你操作的对象大小是 10K，那么在一个的能提供 1000 WCU 的机器上，你的总 OPS 就是 100。当业务能够使用 RCU 和 WCU 描述自己的 Workload 的时候，可预测性的第一步就完成了，至少 DynamoDB 的调度器可以做很多 Pre-partitioning 和预分配机器之类的事情，因为对于不同机型的硬件能力也可能简单的抽象成 WCU 和 RCU 的组合。...</p>
   </section>
-  <footer class="entry-footer"><span title='2022-08-18 12:58:03 +0800 +0800'>August 18, 2022</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2022-08-18 12:58:03 +0800 CST'>August 18, 2022</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to DynamoDB 2022 论文解读" href="http://c4pt0r.github.io/posts/dynamodb-2022/"></a>
 </article>
 
@@ -160,7 +180,7 @@ TiDB 4.0 GA 的 Release Note 截图
 \1. 通过一个假想的目标场景，然后通过产品去满足这个场景来展现价值。
 \2. 解决现有的方案（包括自己的老版本）那些最恼人的问题来展现价值。...</p>
   </section>
-  <footer class="entry-footer"><span title='2022-02-27 21:16:14 +0800 +0800'>February 27, 2022</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2022-02-27 21:16:14 +0800 CST'>February 27, 2022</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 我眼中的 TiDB 5.x：关于基础软件产品价值的思考方式" href="http://c4pt0r.github.io/posts/tidb-5-x-in-pm-s-eye/"></a>
 </article>
 
@@ -178,7 +198,7 @@ TiDB 4.0 GA 的 Release Note 截图
 复杂系统的简洁之美 回到计算机的世界，复杂总是不可回避的，人类总是会在不停尝试创造超出自己理解边界的事物，正所谓创新。而且无穷的复杂性用有穷的代码来表示，本身就是一件非常充满禅学审美的事情。就像我经常举的一个例子：大家有没有想过，TiDB 核心大概百来万行代码，运行在 3 台机器上和运行在 3000 台机器上一样，都是这百来万行代码，但是 3 台机器的复杂性和 3000 台机器复杂性确是千差万别，人肉管理 3 台机器很轻松，但是管理好 3000 台机器，让它们高效稳定的协作这件事情，肯定超出了人作为个体的能力范围，等一下后面我会再聊到 TiDB 的例子。 同样的例子还有很多，例如大家比较熟悉的 Unix 哲学，已经有无数人阐述过，我也不追溯，后边我会用几个比较新鲜的例子，用来阐述复杂系统的简单之美，来让大家体会一下其中妙处。
 元胞自动机 第一个例子，我想聊聊元胞自动机（Cellular Automata），元胞自动机大概是 50 年代由冯诺依曼提出的一个自动机模型，听名字很高级，但事实上非常非常简单，简单到小学生都能马上理解：想象一个 n 维度的无限网格（最好理解的是 2 维，大概就是类似棋盘的样子），每个格子会处于有限的状态，t 作为离散的时间概念，每一个 t 时刻的网格中每一个格子的状态是由 t - 1 时刻这个的格子的邻居格子（ 2 维里面就是上下左右的几个）的状态决定，注意所有的格子都是平等的，受到同一种规则的支配。实现这么一个自动机，也就是百来行代码，最有名的实现是 Conway 的 Game of Life，生命游戏是一个二维的 CA 实现，想象每个格子是一个细胞，规则很简单（来自 Wikipedia）：...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-26 15:20:25 +0800 +0800'>December 26, 2021</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-26 15:20:25 +0800 CST'>December 26, 2021</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 东方美学与软件设计" href="http://c4pt0r.github.io/posts/zen-and-the-art-of-programming/"></a>
 </article>
 
@@ -201,7 +221,7 @@ TiDB 4.0 GA 的 Release Note 截图
 CPU：哪些线程在工作？这些线程都在干嘛？这些线程各自消耗了多少 CPU Time？ 内存：当前内存中存储了哪些东西？这些东西的命中率情况？（通常我们更关注业务缓存）？ 网络 I/O：QPS/TPS 有异常吗？当前主要的网络 I/O 是由什么请求发起的？带宽还够吗？请求延迟？长链接还是短链接（衡量 syscall 的开销）？ 磁盘 I/O：磁盘在读写文件吗？读写哪些文件？大多数的读写是什么 Pattern？吞吐多大？一次 I/O 延迟多大？ 关键日志：不是所有日志都有用，只有包含特定关键字的日志，人们才会关心。所以，有没有特定关键字的日志出现？ 通过以上标准问题的灵魂拷问，必定可以对系统运行状态有一定的了解。
 更进一步的关键是，这些系统的指标一定要和业务上下文联系在一起才能好用，举例说明，对于一个支持事务的数据库来说，假设我们看到 CPU 线程和 call stack，发现大量的 CPU 时间花在了 wait / sleep / idle 之类的事情上，同时也没有其他 I/O 资源瓶颈，此时，如果只看这些的数字可能会一脸懵，但是结合事务的冲突率来看可能柳岸花明，甚至能直接给出这些 lock 的等待时间都花在了哪些事务，甚至哪些行的冲突上，这对观测者是更有用的信息。 也并不是说其他的信息就没用，而是相当多的信息的价值是后验的，例如：绝大多数的 debug 日志，或者那些为了证实猜想的辅助信息，其实在解决未知问题时候几乎没有帮助，而且还需要观察者有大量的背景知识，这类信息最好的呈现方式还是折叠起来，眼不见为净的好。...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 13:06:04 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 13:06:04 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 做出让人爱不释手的基础软件：可观测性和可交互性" href="http://c4pt0r.github.io/posts/dx-in-system-software-1/"></a>
 </article>
 
@@ -218,7 +238,7 @@ TLA&#43; TLA&#43; 背后的思想很简单，TLA&#43; 会通过一套自己的 D
 但是，我们活在一个不完美的世界，即使你写出了完美的证明，也很难保证你就是对的。第一， Simulator 并没有办法模拟出无限多的 paticipants 和并发度， 一般也就是三五个；第二，聪明的你可能也看出来了，一般 TLA&#43; 的推广文章也不会告诉你 Spec 的关键是定义不变量，如果不变量定义不完备，或者定义出错，那么证明就是无效的。因此，我认为形式化验证的意义在于让工程师在写代码之前提高信心，在写证明的过程中也能更加深对算法的理解，此外，如果在 TLC Checker 里就跑出异常，那就更好了。
 目前 PingCAP 应该是国内唯一一个使用 TLA&#43; 证明关键算法，并且将证明的 Spec 开源出来的公司，大家可以参考 pingcap/tla-plus 这个 Repo，以及我们的首席架构师唐刘的这篇 博客 了解更多。...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 13:01:56 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 13:01:56 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 分布式系统 in 2010s ：测试和运维" href="http://c4pt0r.github.io/posts/distributed-system-in-2010s-4/"></a>
 </article>
 
@@ -236,7 +256,7 @@ SSD 的普及，对于存储软件厂商的影响是深远的。
 下面这张图很有意思，来自 Intel 对于 Optane 的测试，我们可以看见在中间那一列，Storage with Optane SSD，随机读取的硬件延迟已经接近操作系统和文件系统带来的延迟，甚至 Linux VFS 本身会变成 CPU 瓶颈。其实背后的原因也很简单，过去由于 VFS 本身在 CPU 上的开销（比如锁）相比过去的 IO 来说太小了，但是现在这些新硬件本身的 IO 延迟已经低到让文件系统本身开销的比例不容忽视了。
 图 2 Intel 对于 Optane 的测试...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 13:00:47 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 13:00:47 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 分布式系统 in 2010s ：硬件的进化" href="http://c4pt0r.github.io/posts/distributed-system-in-2010s-3/"></a>
 </article>
 
@@ -249,7 +269,7 @@ SSD 的普及，对于存储软件厂商的影响是深远的。
     <p>我上大学的时候专业是软件工程，当时的软件工程是 CMM、瀑布模型之类。十几年过去了，看看现在我们的软件开发模式，尤其是在互联网行业，敏捷已经成为主流，很多时候老板说业务下周上线，那基本就是怎么快怎么来，所以现代架构师对于可复用性和弹性会有更多的关注。我所知道业界对 SOA 的关注是从 Amazon 的大规模 SOA 化开始， 2002 年 Bezos 要求 Amazon 的工程团队将所有的业务 API 和服务化， 几条原则 放在今天仍然非常适用：
 All teams will henceforth expose their data and functionality through service interfaces. Teams must communicate with each other through these interfaces. There will be no other form of inter-process communication allowed: no direct linking, no direct reads of another team’s data store, no shared-memory model, no back-doors whatsoever. The only communication allowed is via service interface calls over the network....</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 12:59:16 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 12:59:16 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 分布式系统 in 2010s ：软件构建方式和演化" href="http://c4pt0r.github.io/posts/distributed-system-in-2010s-2/"></a>
 </article>
 
@@ -264,7 +284,7 @@ All teams will henceforth expose their data and functionality through service in
 存储和计算进一步分离 我印象中最早的存储-计算分离的尝试是 Snowflake，Snowflake 团队在 2016 年发表的论文 《The Snowflake Elastic Data Warehouse》 是近几年我读过的最好的大数据相关论文之一，尤其推荐阅读。Snowflake 的架构关键点是在无状态的计算节点 &#43; 中间的缓存层 &#43; S3 上存储数据，计算并不强耦合缓存层，非常符合云的思想。从最近 AWS 推出的 RedShift 冷热分离架构来看，AWS 也承认 Snowflake 这个搞法是先进生产力的发展方向。另外这几年关注数据库的朋友不可能不注意到 Aurora。不同于 Snowflake，Aurora 应该是第一个将存储-计算分离的思想用在 OLTP 数据库中的产品，并大放异彩。Aurora 的成功在于将数据复制的粒度从 Binlog降低到 Redo Log ，极大地减少复制链路上的 IO 放大。而且前端复用了 MySQL，基本做到了 100% 的应用层 MySQL 语法兼容，并且托管了运维，同时让传统的 MySQL 适用范围进一步拓展，这在中小型数据量的场景下是一个很省心的方案。
 虽然 Aurora 获得了商业上的成功，但是从技术上，我并不觉得有很大的创新。熟悉 Oracle 的朋友第一次见 Aurora 的架构可能会觉得和 RAC 似曾相识。Oracle 大概在十几年前就用了类似的方案，甚至很完美的解决了 Cache Coherence 的问题。另外，Aurora 的 Multi-Master 还有很长的路要走，从最近在 ReInvent 上的说法来看，目前 Aurora 的 Multi-Master 的主要场景还是作为 Single Writer 的高可用方案，本质的原因应该是目前 Multi-Writer 采用乐观冲突检测，冲突检测的粒度是 Page，在冲突率高的场合会带来很大的性能下降。...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 12:58:03 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 12:58:03 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 分布式系统 in 2010s ：存储之数据库篇" href="http://c4pt0r.github.io/posts/distributed-system-in-2010s-1/"></a>
 </article>
 
@@ -285,7 +305,7 @@ TiDB 这两年最重要的一件事情，是研发流程以一个全新的发版
 两年前我的 PPT 里面有一页叫 Everything is Pluggable，我觉得特别有味道，**TiDB****的真正优势在于技术开放性。**架构开放就意味着能够产生更多的连接，更多连接意味着更快的迭代速度、更多的可能性。
 为什么 TiDB 的系统核心优势是开放性？大家可以花几秒钟时间去思考一下，这一个思考的角度，让我这两年慢慢开始变成一个哲学家。这个角度是：单机数据库和分布式数据库最本质的区别是什么？做分布式数据库的工程师的这些痛苦和幸福的根源在哪里？我们真正的敌人是什么？我们要解决什么样的问题？我们怎么解决这些问题？...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 12:54:20 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 12:54:20 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;2 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to [演讲] The Future of Database 2021" href="http://c4pt0r.github.io/posts/the-future-of-db-2021/"></a>
 </article>
 
@@ -305,7 +325,7 @@ TiDB 这两年最重要的一件事情，是研发流程以一个全新的发版
 和很多分布式数据库不太一样的是，我们的 Region 的大小比较小（默认 96MB) ，另外数据的分布并不是静态的，而是动态的，Region 会像细胞一样分裂/合并，也会在不同机器之间移动进行动态的负载均衡。
 现在回头看这个设计，还是觉得无比的简洁和优雅。对用户而言再也不用去思考怎么分库，怎么分表，数据在最底层的细胞就像有生命一样繁衍和迁徙。 然后问题就来了，对于这样的数据库而言，有没有一种办法能够直观地描述系统的运行时状态？我怎么知道它是不是「生病」了？我能不能预测这个系统的未来？我能不能发现未知的风险？ 过去，不管是业务开发者还是 DBA，衡量一个数据库的状态，来来回回就是几个指标，QPS 、TPS、查询时间、机器负载（CPU、网络、磁盘），但是很多时候就像是盲人摸象一样对于系统的全局我们是不清楚的，再加上在一个分布式的架构下，很多时候，我们可能会被海量的数字蒙蔽了双眼。有经验一些的 DBA 可能能从多个指标里通过自己的经验，模糊构建出业务全局状态，但是到底这个经验往往是不可描述的，这就是为什么一些老运维，老 DBA 那么值钱的原因，但是我认为这种做事方式是很难 scale 的。现代医学有 CT 有 B 超有核磁共振，这些现代化的手段极大的促进了现代医学的发展，因为我们第一次能「看见」我们身体的内部状态，从而才能得出正确的判断，在计算机的世界道理也是相通的，最好通过某些工具让人更清晰的看到系统运行的健康状态、帮助诊断“病灶”，从而降低经验门槛和不确定性。 过去经常有朋友问我：「你说我这个业务适不适合使用 TiDB？」这时我们只能问，你的 QPS 多少 TPS 多少，数据量多少？读写比？典型查询？数据分布怎么样？表结构是什么呀？等等一连串的灵魂拷问，而且很多术语都非常专业，不是在这个行业摸爬滚打很久的老司机可能都搞不太清楚。有些信息可能是敏感的，也不方便共享。所以“预判 TiDB 到底适不适合某类业务”就成了一个玄学问题，这个问题困扰了我很久，很多时候也只能凭个人感觉和经验。其实这个问题也并不是 TiDB 特有，尤其是最近几年，几乎所有现代的分布式系统都或多或少有类似的问题。 在过去，一个物理机器的状态确实可以通过几个监控指标描述，但是随着我们的系统越来越复杂，我们的观测对象正渐渐的从「Infrastructure」转到「应用」，观察行为本身从「Monitoring（监控）」到「Observability（观测）」。虽然看上去这两者只是文字上的差别，但是请仔细思考背后的含义。关于这个话题，我很喜欢引用下面这张图：...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 12:33:24 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 12:33:24 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 我眼中的分布式系统可观测性" href="http://c4pt0r.github.io/posts/observability-keyviz/"></a>
 </article>
 
@@ -335,7 +355,7 @@ TiDB 这两年最重要的一件事情，是研发流程以一个全新的发版
 上面教员的话里面有个关键的点，关于正向循环，也就是迭代。这个道理同样也适用于软件开发，软件从来都不是静止的，随着市场和竞争环境的变化，你今天的竞争优势，很可能明天就不是了。很多人都喜欢用静态的眼光看待问题，热衷于各种方案的横向对比，而忽略了进化速度，在这点上，我可能更看重的是同一个产品的纵向对比，举个例子：目前有 A, B, C三个方案，可能当下看这三个方案差距不大，也许在百分之五十之内。但是如果其中一个开源方案每次和自己半年前比都是在翻倍的提升（背后开源社区推动），但是闭源的方案的进步受限于团队规模和资源。这时候的选择除非是那种火烧眉毛的情况，否则一定应该选择一个迭代速度更快，增长率更好，更代表未来的方案，这个也很好理解。这是人的思维的一个惯性，人总是倾向用线性思维去看待问题，于是对非线性增长的事物往往会习惯性的低估。
 说一个更加震撼的例子，我粗略统计了一下，从 2018 到现在，也就短短一年多时间，整个 TiDB 的 SQL 层这么一个项目发生了 30000 多次提交，有接近 60% 的源码被修改。也就是说，每一年的 TiDB 都和上一年是不一样的，是一个更适应当下的，更加进步的一个 TiDB，而且随着社区的不断壮大，迭代的速度会越来越快。我完全不能想象，如果 TiDB 是一个闭源软件，从第一行代码开始写，到现在短短的 5 年时间，如何能够到达现在这个成熟度，这一切都是得益于开源社区的带来的加速度和反复迭代。...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 12:16:37 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 12:16:37 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to 大教堂终将倒下，但集市永存" href="http://c4pt0r.github.io/posts/oss-in-china/"></a>
 </article>
 
@@ -369,7 +389,7 @@ TiDB 这两年最重要的一件事情，是研发流程以一个全新的发版
 社区的终局
 一个好的开源软件社区的终局会是什么样子？对于这个问题，其实我们有很多能参考的例子，例如 GNU Linux、Hadoop、Spark、MySQL 等等。我认为，不管一个开源软件及社区是由商业公司发起还是其他方式发起、壮大，到最后一定会出现独立于某公司之外的中立组织来接管这个社区，这也是最自然合理的方式。...</p>
   </section>
-  <footer class="entry-footer"><span title='2021-12-03 12:09:52 +0800 +0800'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
+  <footer class="entry-footer"><span title='2021-12-03 12:09:52 +0800 CST'>December 3, 2021</span>&nbsp;·&nbsp;1 min&nbsp;·&nbsp;Ed Huang</footer>
   <a class="entry-link" aria-label="post link to In Community We Trust" href="http://c4pt0r.github.io/posts/in-community-we-trust/"></a>
 </article>
     </main>
